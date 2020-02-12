@@ -1,22 +1,21 @@
-
-import 'package:reminder/models/remainder_model.dart';
+import 'package:reminder/models/reminder_model.dart';
 
 class CalendarModel {
-  List<RemainderModel> events;
+  List<ReminderModel> events;
 
   CalendarModel({
     this.events,
   });
 
-  Map<DateTime, List<RemainderModel>> getEvents() {
-    Map<DateTime, List<RemainderModel>> calendar = {};
+  Map<DateTime, List<ReminderModel>> getEvents() {
+    Map<DateTime, List<ReminderModel>> calendar = {};
 
     events.forEach((e) {
       final _dateTime = DateTime.parse(e.date);
       if (calendar.containsKey(_dateTime)) {
         calendar[_dateTime].add(e);
       } else {
-        List<RemainderModel> list = new List();
+        List<ReminderModel> list = new List();
         list.add(e);
         calendar[_dateTime] = list;
       }

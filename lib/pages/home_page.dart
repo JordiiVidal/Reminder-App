@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:reminder/bloc/events_bloc.dart';
+import 'package:reminder/bloc/provider.dart';
 import 'package:reminder/constants/style.dart';
-import 'package:reminder/models/remainder_model.dart';
+import 'package:reminder/models/reminder_model.dart';
 import 'package:reminder/utils/date_formater.dart';
 import 'package:reminder/widgets/app_bar_home.dart';
 import 'package:reminder/widgets/calendar_home.dart';
+import 'package:reminder/widgets/remainder_card.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class HomePage extends StatefulWidget {
@@ -37,6 +39,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: kPrimaryColor,
       body: Stack(
@@ -66,7 +69,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Expanded(
-                    child: _buildTasksList(),
+                    child: _buildTasksList(context),
                   )
                 ],
               ),
@@ -81,14 +84,16 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(18.0),
                 topRight: Radius.circular(18.0)),
-            panel: _panel(),
+            panel: _panel(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _panel() {
+  Widget _panel(BuildContext context) {
+    final bloc = Provider.of(context);
+
     return Column(
       children: <Widget>[
         SizedBox(
@@ -173,13 +178,14 @@ class _HomePageState extends State<HomePage> {
         ),
         RaisedButton(
           onPressed: () {
-            final remainder = RemainderModel(
+            final reminder = ReminderModel(
               date: convertDateTimeyMd(DateTime.now()).toString(),
               subject: _inputSubject,
               description: '',
               time: time(DateTime.now()),
             );
-            eventBloc.addRemainder(remainder);
+            bloc.insertEvent(reminder);
+//            eventBloc.addRemainder(remainder);
             setState(() {
               _inputSubject = '';
             });
@@ -200,17 +206,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTasksList() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: <Widget>[],
+  Widget _buildTasksList(BuildContext context) {
+    final bloc = Provider.of(context);
+
+    return StreamBuilder(
+      stream: bloc.eventsStream,
+      builder:
+          (BuildContext context, AsyncSnapshot<List<ReminderModel>> snapshot) {
+        if (snapshot.hasData) {
+          final reminders = snapshot.data;
+          print(reminders);
+
+          return ListView.builder(
+            itemCount: reminders.length,
+            itemBuilder: (context, i) {
+              return ReminderCard(element: reminders[i]);
+            },
+          );
+        } else {
+          return CircularProgressIndicator();
+        }
+      },
     );
   }
 
   Widget _buildTableCalendar() {
     final eventsBloc = new EventsBloc();
 
-    return StreamBuilder<Map<DateTime, List<RemainderModel>>>(
+    return StreamBuilder<Map<DateTime, List<ReminderModel>>>(
       stream: eventsBloc.eventsStream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {

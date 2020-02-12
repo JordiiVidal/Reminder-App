@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:reminder/bloc/calendar_bloc.dart';
 
 class Provider extends InheritedWidget {
+  final _calendarBloc = CalendarBloc();
+
   static Provider _instance;
 
   factory Provider({Key key, Widget child}) {
@@ -19,8 +21,6 @@ class Provider extends InheritedWidget {
 
   Provider._internal({Key key, Widget child}) : super(key: key, child: child);
 
-  final calendarBloc = CalendarBloc();
-
   @override //notificar a los child
   bool updateShouldNotify(InheritedWidget oldWidget) => true;
 
@@ -28,6 +28,6 @@ class Provider extends InheritedWidget {
     //context = arbol de widgets
     return context
         .dependOnInheritedWidgetOfExactType<Provider>()
-        .calendarBloc; //devuleve la instancia del login bloc
+        ._calendarBloc; //devuleve la instancia del login bloc
   }
 }

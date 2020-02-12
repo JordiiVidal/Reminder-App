@@ -1,11 +1,11 @@
-class RemainderModel {
+class ReminderModel {
   int id;
   String date;
   String subject;
   String description;
   String time;
 
-  RemainderModel({
+  ReminderModel({
     this.id,
     this.date,
     this.subject,
@@ -13,7 +13,7 @@ class RemainderModel {
     this.time,
   });
 
-  factory RemainderModel.fromJson(Map<String, dynamic> json) => RemainderModel(
+  factory ReminderModel.fromJson(Map<String, dynamic> json) => ReminderModel(
         id: json["id"],
         date: json["date"],
         subject: json["subject"],

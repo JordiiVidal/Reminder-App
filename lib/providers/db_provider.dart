@@ -2,10 +2,9 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:reminder/models/calendar_model.dart';
-import 'package:reminder/models/remainder_model.dart';
+import 'package:reminder/models/reminder_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
-
 
 class DBProvider {
   static String _table = 'Remainders';
@@ -43,17 +42,17 @@ class DBProvider {
   }
 
   //INSERT
-  insertRemainder(RemainderModel remainder) async {
+  insertReminder(ReminderModel reminder) async {
     print('insert');
     final db = await database; //get database
 
-    final res = await db.insert(_table, remainder.toJson());
+    final res = await db.insert(_table, reminder.toJson());
 
     return res;
   }
 
   //DELTE
-  deleteRemainder(int id) async {
+  deleteReminder(int id) async {
     print('insert');
     final db = await database; //get database
 
@@ -63,32 +62,45 @@ class DBProvider {
   }
 
   //GET
-  Future<RemainderModel> getRemainderId(int id) async {
+  Future<ReminderModel> getReminderId(int id) async {
     final db = await database;
     final res = await db
         .query(_table, where: 'id = ?', whereArgs: [id]); //devuelve una lista
 
-    return res.isNotEmpty ? RemainderModel.fromJson(res.first) : null;
+    return res.isNotEmpty ? ReminderModel.fromJson(res.first) : null;
   }
 
-  Future<List<RemainderModel>> getRemainderDate(String date) async {
+  Future<List<ReminderModel>> getReminders() async {
     final db = await database;
-    final res = await db.query(_table,
-        where: 'date = ?', whereArgs: [date]); //devuelve una lista
+    final res = await db.query(
+      _table,
+    ); //devuelve una lista
 
-    List<RemainderModel> list = res.isNotEmpty
-        ? res.map((r) => RemainderModel.fromJson(r)).toList()
+    List<ReminderModel> list = res.isNotEmpty
+        ? res.map((r) => ReminderModel.fromJson(r)).toList()
         : [];
 
     return list;
   }
 
-  Future<Map<DateTime, List<RemainderModel>>> getCalendar() async {
+  Future<List<ReminderModel>> getReminderDate(String date) async {
+    final db = await database;
+    final res = await db.query(_table,
+        where: 'date = ?', whereArgs: [date]); //devuelve una lista
+
+    List<ReminderModel> list = res.isNotEmpty
+        ? res.map((r) => ReminderModel.fromJson(r)).toList()
+        : [];
+
+    return list;
+  }
+
+  Future<Map<DateTime, List<ReminderModel>>> getCalendar() async {
     final db = await database;
     final res = await db.query(_table);
 
-    List<RemainderModel> list = res.isNotEmpty
-        ? res.map((r) => RemainderModel.fromJson(r)).toList()
+    List<ReminderModel> list = res.isNotEmpty
+        ? res.map((r) => ReminderModel.fromJson(r)).toList()
         : [];
 
     return CalendarModel(events: list).getEvents();

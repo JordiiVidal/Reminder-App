@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 
-import 'package:reminder/bloc/events_bloc.dart';
 import 'package:reminder/constants/style.dart';
-import 'package:reminder/models/remainder_model.dart';
+import 'package:reminder/models/reminder_model.dart';
 
-class RemainderCard extends StatelessWidget {
-  const RemainderCard({
+class ReminderCard extends StatelessWidget {
+  const ReminderCard({
     Key key,
-    @required this.eventBloc,
-    @required RemainderModel element,
+    @required ReminderModel element,
   })  : _element = element,
         super(key: key);
 
-  final EventsBloc eventBloc;
-  final RemainderModel _element;
+  final ReminderModel _element;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +18,7 @@ class RemainderCard extends StatelessWidget {
       direction: DismissDirection.endToStart,
       key: UniqueKey(),
       onDismissed: (direction) {
-        eventBloc.deleteRemainder(_element.id);
+        ///bloc.deleteRemainder(_element.id);
       },
       background: Container(
         color: Color(0xffd78989),
@@ -44,14 +41,15 @@ class RemainderCard extends StatelessWidget {
       ),
       child: Container(
         decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey[300]))),
+            border: Border(
+                bottom: BorderSide(color: Colors.grey[500], width: 0.2))),
         child: Row(
           children: <Widget>[
             Container(
               padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10),
               child: Text(
                 _element.time,
-                style: TextStyle(fontSize: 14.0, color: kPrimaryColor),
+                style: TextStyle(fontSize: 14.0, color: Colors.white),
               ),
             ),
             Container(
@@ -60,15 +58,17 @@ class RemainderCard extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     _element.subject,
-                    style:
-                        TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white),
                   ),
                   SizedBox(
                     height: 3.0,
                   ),
                   Text(
                     _element.description,
-                    style: TextStyle(fontSize: 12.0),
+                    style: TextStyle(fontSize: 12.0, color: Colors.white),
                   ),
                 ],
               ),
