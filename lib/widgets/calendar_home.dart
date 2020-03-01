@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter/cupertino.dart';
@@ -10,14 +12,17 @@ import 'package:table_calendar/table_calendar.dart';
 
 class CalendarHome extends StatefulWidget {
   final events;
+  final Function changeHeight;
 
-  CalendarHome(this.events);
+  CalendarHome(this.events, this.changeHeight);
   @override
   _CalendarHomeState createState() => _CalendarHomeState();
 }
 
 class _CalendarHomeState extends State<CalendarHome>
     with TickerProviderStateMixin {
+  final GlobalKey _calendarKey = GlobalKey();
+
   final eventBloc = EventsBloc();
   List _selectedEvents;
   AnimationController _animationController;
@@ -43,6 +48,9 @@ class _CalendarHomeState extends State<CalendarHome>
       duration: const Duration(milliseconds: 100),
     );
 
+    Timer(Duration(milliseconds: 350), () {
+      widget.changeHeight(context.size.height);
+    });
     _animationController.forward();
   }
 
@@ -68,6 +76,9 @@ class _CalendarHomeState extends State<CalendarHome>
       DateTime first, DateTime last, CalendarFormat format) {
     final bloc = Provider.of(context);
     bloc.changeFocusDate(_calendarController.focusedDay);
+    Timer(Duration(milliseconds: 350), () {
+      widget.changeHeight(context.size.height);
+    });
   }
 
   void _loadEvents() {
@@ -84,6 +95,7 @@ class _CalendarHomeState extends State<CalendarHome>
 
   Widget _calendar() {
     return TableCalendar(
+      key: _calendarKey,
       availableGestures: AvailableGestures.horizontalSwipe,
       locale: 'es_ES',
       calendarController: _calendarController,

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:reminder/bloc/calendar_bloc.dart';
 import 'package:reminder/bloc/events_bloc.dart';
-import 'package:reminder/bloc/provider.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+
 import 'package:reminder/constants/style.dart';
 import 'package:reminder/models/reminder_model.dart';
-import 'package:reminder/utils/date_formater.dart';
 import 'package:reminder/widgets/app_bar_home.dart';
 import 'package:reminder/widgets/calendar_home.dart';
-import 'package:reminder/widgets/remainder_card.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,29 +16,50 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final PanelController _controller = PanelController();
+  final key = new GlobalKey();
+  final containerKey = GlobalKey();
+  IconData _iconPanel = Icons.keyboard_arrow_up;
+
   final eventBloc = EventsBloc();
 
-  String _inputSubject = '';
+  double _minHeightPanel = 300;
 
   void openPanel() {
-    if (_controller.isPanelClosed()) {
-      setState(() {
+    setState(() {
+      if (_controller.isPanelOpen) {
         _controller.open();
-      });
-    }
+        _iconPanel = Icons.keyboard_arrow_down;
+      } else {
+        _controller.close();
+        _iconPanel = Icons.keyboard_arrow_up;
+      }
+    });
   }
 
   void closePanel() {
-    if (_controller.isPanelOpen()) {
+    if (_controller.isPanelOpen) {
       setState(() {
         _controller.close();
       });
     }
   }
 
+  void changePanel(height) {
+    double maxHeight = MediaQuery.of(context).size.height;
+    double headerHegiht = containerKey.currentContext.size.height;
+    print(headerHegiht);
+    height = maxHeight - (height + headerHegiht + 50);
+    setState(() {
+      _minHeightPanel = height;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
+    final bloc = new CalendarBloc();
+    final eventsBloc = new EventsBloc();
+    double height = MediaQuery.of(context).size.height;
+    double statusBarHeight = MediaQuery.of(context).padding.top;
 
     return Scaffold(
       backgroundColor: kPrimaryColor,
@@ -50,27 +71,23 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 children: <Widget>[
-                  AppBarHome(openPanel),
                   Container(
+                    key: containerKey,
+                    child: AppBarHome(openPanel),
+                  ),
+                  Container(
+                    key: key,
                     margin: EdgeInsets.only(top: 10.0),
-                    child: _buildTableCalendar(),
-                  ),
-                  SizedBox(
-                    height: 20.0,
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Recordatorios',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 21.0),
+                    child: StreamBuilder<Map<DateTime, List<ReminderModel>>>(
+                      stream: eventsBloc.eventsStream,
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return Container();
+                        }
+                        return CalendarHome(snapshot.data, changePanel);
+                      },
                     ),
                   ),
-                  Expanded(
-                    child: _buildTasksList(context),
-                  )
                 ],
               ),
             ),
@@ -79,167 +96,68 @@ class _HomePageState extends State<HomePage> {
             parallaxEnabled: true,
             parallaxOffset: .5,
             controller: _controller,
-            minHeight: 40,
-            maxHeight: size.height * 0.65,
+            minHeight: _minHeightPanel,
+            maxHeight: height - statusBarHeight,
             borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(18.0),
-                topRight: Radius.circular(18.0)),
-            panel: _panel(context),
+              topLeft: Radius.circular(25.0),
+              topRight: Radius.circular(25.0),
+            ),
+            panelBuilder: (ScrollController sc) => _scrollingList(sc),
           ),
         ],
       ),
     );
   }
 
-  Widget _panel(BuildContext context) {
-    final bloc = Provider.of(context);
-
-    return Column(
-      children: <Widget>[
-        SizedBox(
-          height: 12.0,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Container(
-              width: 30,
-              height: 5,
-              decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.all(Radius.circular(12.0))),
+  Widget _scrollingList(ScrollController sc) {
+    return ListView.builder(
+      controller: sc,
+      itemCount: 50,
+      itemBuilder: (BuildContext context, int i) {
+        return Slidable(
+          actionPane: SlidableDrawerActionPane(),
+          actionExtentRatio: 0.25,
+          actions: <Widget>[
+            IconSlideAction(
+              caption: 'Archive',
+              color: Colors.blue,
+              icon: Icons.archive,
+              onTap: () => print('Archive'),
+            ),
+            IconSlideAction(
+              caption: 'Share',
+              color: Colors.indigo,
+              icon: Icons.share,
+              onTap: () => print('Share'),
             ),
           ],
-        ),
-        SizedBox(
-          height: 18.0,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              "Añadir Recordatorio",
-              style: TextStyle(
-                fontWeight: FontWeight.normal,
-                fontSize: 24.0,
+          secondaryActions: <Widget>[
+            IconSlideAction(
+              caption: 'More',
+              color: Colors.black45,
+              icon: Icons.more_horiz,
+              onTap: () => print('More'),
+            ),
+            IconSlideAction(
+              caption: 'Delete',
+              color: Colors.red,
+              icon: Icons.delete,
+              onTap: () => print('Delete'),
+            ),
+          ],
+          child: Container(
+            color: Colors.white,
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.indigoAccent,
+                child: Text('$i'),
+                foregroundColor: Colors.white,
               ),
-            ),
-          ],
-        ),
-        SizedBox(
-          height: 12.0,
-        ),
-        Theme(
-          data: ThemeData(
-            primaryColor: kPrimaryColor,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              children: <Widget>[
-                TextFormField(
-                  maxLength: 24,
-                  textCapitalization: TextCapitalization.sentences,
-                  onChanged: (String val) =>
-                      setState(() => _inputSubject = val),
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return "Escribir el título del recordatorio.";
-                    }
-                    return null;
-                  },
-                  initialValue: _inputSubject,
-                  style: TextStyle(
-                    color: kPrimaryColor,
-                    fontSize: 18.0,
-                  ),
-                  decoration: InputDecoration(
-                    helperText: 'Escribir el nombre del recordatorio.',
-                    helperStyle:
-                        TextStyle(fontSize: 10.0, color: kPrimaryColor),
-                    errorStyle: TextStyle(fontSize: 9.0, color: kPrimaryColor),
-                    labelText: 'Recordatorio',
-                    labelStyle: TextStyle(
-                        color: kPrimaryColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500),
-                    hintText: 'Título',
-                    hintStyle: TextStyle(color: kPrimaryColor, fontSize: 20),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 5.0, vertical: 10.0),
-                  ),
-                ),
-              ],
+              title: Text('Tile n°$i'),
+              subtitle: Text('SlidableDrawerDelegate'),
             ),
           ),
-        ),
-        SizedBox(
-          height: 12.0,
-        ),
-        RaisedButton(
-          onPressed: () {
-            final reminder = ReminderModel(
-              date: convertDateTimeyMd(DateTime.now()).toString(),
-              subject: _inputSubject,
-              description: '',
-              time: time(DateTime.now()),
-            );
-            bloc.insertEvent(reminder);
-//            eventBloc.addRemainder(remainder);
-            setState(() {
-              _inputSubject = '';
-            });
-            closePanel();
-          },
-          child: const Text(
-            'CREAR',
-            style: TextStyle(fontSize: 16.0),
-          ),
-          textColor: kLightColor,
-          color: kPrimaryColor,
-          padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 45.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTasksList(BuildContext context) {
-    final bloc = Provider.of(context);
-
-    return StreamBuilder(
-      stream: bloc.eventsStream,
-      builder:
-          (BuildContext context, AsyncSnapshot<List<ReminderModel>> snapshot) {
-        if (snapshot.hasData) {
-          final reminders = snapshot.data;
-          print(reminders);
-
-          return ListView.builder(
-            itemCount: reminders.length,
-            itemBuilder: (context, i) {
-              return ReminderCard(element: reminders[i]);
-            },
-          );
-        } else {
-          return CircularProgressIndicator();
-        }
-      },
-    );
-  }
-
-  Widget _buildTableCalendar() {
-    final eventsBloc = new EventsBloc();
-
-    return StreamBuilder<Map<DateTime, List<ReminderModel>>>(
-      stream: eventsBloc.eventsStream,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return Container();
-        }
-        return CalendarHome(snapshot.data);
+        );
       },
     );
   }
