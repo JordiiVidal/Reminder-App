@@ -47,7 +47,7 @@ class AppBarHome extends StatelessWidget {
               children: <Widget>[
                 IconButton(
                   onPressed: () {
-                    openPanel();
+                    Navigator.pushNamed(context, '/add');
                   },
                   icon: Icon(
                     Icons.add,
